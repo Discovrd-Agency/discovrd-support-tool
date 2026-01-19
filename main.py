@@ -1,10 +1,10 @@
 """
-SEO & AI Visibility Analysis Tool - Stage 1
-FastAPI backend for analysing backlinks, technical SEO, and content structure
+SEO & AI Visibility Analysis Tool - Stage 2
+FastAPI backend with web UI for analysing backlinks, technical SEO, and content structure
 """
 
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from typing import Optional
 import pandas as pd
 import numpy as np
@@ -388,14 +388,620 @@ def project_roi(
     }
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Health check endpoint"""
-    return {
-        "status": "operational",
-        "service": "SEO & AI Visibility Analysis Tool",
-        "version": "1.0.0 - Stage 1"
-    }
+    """Serve HTML form for SEO analysis"""
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en-GB">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SEO & AI Visibility Analysis Tool</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+                color: #333;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                padding: 40px;
+            }
+            h1 {
+                color: #667eea;
+                font-size: 28px;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            .subtitle {
+                text-align: center;
+                color: #666;
+                margin-bottom: 30px;
+                font-size: 14px;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+                color: #444;
+                font-size: 14px;
+            }
+            input[type="text"],
+            input[type="number"] {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                transition: border-color 0.3s;
+            }
+            input[type="text"]:focus,
+            input[type="number"]:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            input[type="file"] {
+                width: 100%;
+                padding: 10px;
+                border: 2px dashed #e0e0e0;
+                border-radius: 6px;
+                background: #f9f9f9;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            input[type="file"]:hover {
+                border-color: #667eea;
+                background: #f0f0ff;
+            }
+            .file-hint {
+                font-size: 12px;
+                color: #888;
+                margin-top: 5px;
+            }
+            .row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            button {
+                width: 100%;
+                padding: 15px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+                margin-top: 10px;
+            }
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            }
+            button:active {
+                transform: translateY(0);
+            }
+            .info-box {
+                background: #f0f7ff;
+                border-left: 4px solid #667eea;
+                padding: 15px;
+                margin-bottom: 25px;
+                border-radius: 4px;
+                font-size: 13px;
+                color: #555;
+            }
+            .info-box strong {
+                color: #667eea;
+            }
+            @media (max-width: 600px) {
+                .row {
+                    grid-template-columns: 1fr;
+                }
+                .container {
+                    padding: 20px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>SEO & AI Visibility Analysis Tool</h1>
+            <p class="subtitle">Analyse your website's SEO health and project potential ROI</p>
+
+            <div class="info-box">
+                <strong>Instructions:</strong> Complete all fields below and upload your Screaming Frog crawl export and backlink data CSV.
+                The tool will analyse your site's technical health, backlink profile, and content structure, then provide actionable recommendations.
+            </div>
+
+            <form action="/analyse-form" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="website_url">Website URL</label>
+                    <input type="text" id="website_url" name="website_url" placeholder="https://example.com" required>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="monthly_traffic">Monthly Traffic (visitors)</label>
+                        <input type="number" id="monthly_traffic" name="monthly_traffic" placeholder="10000" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="conversion_rate">Conversion Rate (%)</label>
+                        <input type="number" id="conversion_rate" name="conversion_rate" placeholder="2.5" required min="0" step="0.01">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="avg_order_value">Average Order Value (£)</label>
+                        <input type="number" id="avg_order_value" name="avg_order_value" placeholder="50.00" required min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="investment_amount">Investment Amount (£)</label>
+                        <input type="number" id="investment_amount" name="investment_amount" placeholder="5000.00" required min="0" step="0.01">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sf_file">Screaming Frog CSV Export</label>
+                    <input type="file" id="sf_file" name="sf_file" accept=".csv" required>
+                    <div class="file-hint">Must contain: URL, Status Code, Title 1, Meta Description 1, Word Count</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="backlink_file">Backlink CSV File</label>
+                    <input type="file" id="backlink_file" name="backlink_file" accept=".csv" required>
+                    <div class="file-hint">Must contain: source_url, domain_authority, link_type, spam_score</div>
+                </div>
+
+                <button type="submit">Analyse Website</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
+
+
+@app.post("/analyse-form", response_class=HTMLResponse)
+async def analyse_form(
+    website_url: str = Form(...),
+    monthly_traffic: int = Form(...),
+    conversion_rate: float = Form(...),
+    avg_order_value: float = Form(...),
+    investment_amount: float = Form(...),
+    sf_file: UploadFile = File(...),
+    backlink_file: UploadFile = File(...)
+):
+    """
+    Analyse SEO health and project ROI - Returns HTML report.
+
+    Accepts:
+    - Form fields: website_url, monthly_traffic, conversion_rate, avg_order_value, investment_amount
+    - Files: sf_file (Screaming Frog export), backlink_file (backlink data)
+
+    Returns: HTML report with scores, issues, and ROI projections
+    """
+
+    try:
+        # Read Screaming Frog CSV
+        sf_content = await sf_file.read()
+        sf_df = pd.read_csv(io.BytesIO(sf_content))
+
+        # Read Backlink CSV
+        backlink_content = await backlink_file.read()
+        backlink_df = pd.read_csv(io.BytesIO(backlink_content))
+
+        # Calculate scores
+        backlink_results = score_backlinks(backlink_df)
+        technical_results = score_technical(sf_df)
+        content_structure_results = score_content_structure(sf_df)
+
+        # Calculate ROI
+        roi_results = project_roi(
+            backlink_score=backlink_results["health_score"],
+            technical_score=technical_results["health_score"],
+            content_structure_score=content_structure_results["score"],
+            monthly_traffic=monthly_traffic,
+            conversion_rate=conversion_rate,
+            avg_order_value=avg_order_value,
+            investment_amount=investment_amount
+        )
+
+        # Extract overall health score from ROI results
+        overall_health_score = roi_results.pop("overall_health_score")
+
+        # Generate HTML report
+        def get_score_color(score):
+            if score >= 80: return "#10b981"
+            elif score >= 60: return "#f59e0b"
+            else: return "#ef4444"
+
+        def get_score_status(score):
+            if score >= 80: return "Excellent"
+            elif score >= 60: return "Good"
+            elif score >= 40: return "Needs Improvement"
+            else: return "Critical"
+
+        html_report = f"""
+        <!DOCTYPE html>
+        <html lang="en-GB">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>SEO Analysis Report - {website_url}</title>
+            <style>
+                * {{
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }}
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    padding: 20px;
+                    color: #333;
+                }}
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    padding: 40px;
+                }}
+                h1 {{
+                    color: #667eea;
+                    font-size: 32px;
+                    margin-bottom: 10px;
+                }}
+                .website-url {{
+                    color: #666;
+                    font-size: 18px;
+                    margin-bottom: 30px;
+                }}
+                .back-link {{
+                    display: inline-block;
+                    margin-bottom: 20px;
+                    color: #667eea;
+                    text-decoration: none;
+                    font-weight: 600;
+                }}
+                .back-link:hover {{
+                    text-decoration: underline;
+                }}
+                .overall-score {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    text-align: center;
+                    margin-bottom: 30px;
+                }}
+                .overall-score h2 {{
+                    font-size: 18px;
+                    margin-bottom: 15px;
+                    opacity: 0.9;
+                }}
+                .overall-score .score {{
+                    font-size: 64px;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                }}
+                .overall-score .status {{
+                    font-size: 20px;
+                    opacity: 0.9;
+                }}
+                .grid {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 30px;
+                }}
+                .card {{
+                    background: white;
+                    border: 2px solid #e0e0e0;
+                    border-radius: 12px;
+                    padding: 25px;
+                }}
+                .card h3 {{
+                    font-size: 18px;
+                    margin-bottom: 15px;
+                    color: #444;
+                }}
+                .score-display {{
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 20px;
+                }}
+                .score-number {{
+                    font-size: 48px;
+                    font-weight: bold;
+                }}
+                .score-label {{
+                    font-size: 14px;
+                    color: #666;
+                }}
+                .metric-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #f0f0f0;
+                }}
+                .metric-label {{
+                    color: #666;
+                    font-size: 14px;
+                }}
+                .metric-value {{
+                    font-weight: 600;
+                    color: #333;
+                }}
+                .issue-list {{
+                    list-style: none;
+                }}
+                .issue-item {{
+                    padding: 12px;
+                    margin-bottom: 10px;
+                    border-radius: 6px;
+                    background: #f9f9f9;
+                    border-left: 4px solid #666;
+                }}
+                .issue-item.critical {{
+                    background: #fef2f2;
+                    border-left-color: #ef4444;
+                }}
+                .issue-item.important {{
+                    background: #fffbeb;
+                    border-left-color: #f59e0b;
+                }}
+                .issue-item.optimisation {{
+                    background: #f0f9ff;
+                    border-left-color: #3b82f6;
+                }}
+                .issue-priority {{
+                    font-size: 11px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    margin-bottom: 5px;
+                }}
+                .issue-description {{
+                    font-size: 14px;
+                    color: #333;
+                }}
+                .quick-win {{
+                    padding: 10px 15px;
+                    margin-bottom: 8px;
+                    background: #f0fdf4;
+                    border-left: 4px solid #10b981;
+                    border-radius: 4px;
+                    font-size: 14px;
+                }}
+                .roi-section {{
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    margin-top: 30px;
+                }}
+                .roi-section h2 {{
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                }}
+                .roi-grid {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                }}
+                .roi-metric {{
+                    text-align: center;
+                }}
+                .roi-value {{
+                    font-size: 32px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }}
+                .roi-label {{
+                    font-size: 14px;
+                    opacity: 0.9;
+                }}
+                @media print {{
+                    body {{
+                        background: white;
+                    }}
+                    .back-link {{
+                        display: none;
+                    }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <a href="/" class="back-link">← Analyse Another Website</a>
+
+                <h1>SEO Analysis Report</h1>
+                <div class="website-url">{website_url}</div>
+
+                <div class="overall-score">
+                    <h2>Overall Health Score</h2>
+                    <div class="score">{overall_health_score}</div>
+                    <div class="status">{get_score_status(overall_health_score)}</div>
+                </div>
+
+                <div class="grid">
+                    <!-- Backlink Health -->
+                    <div class="card">
+                        <h3>Backlink Health Score</h3>
+                        <div class="score-display">
+                            <span class="score-number" style="color: {get_score_color(backlink_results['health_score'])}">{backlink_results['health_score']}</span>
+                            <span class="score-label">/100</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Total Backlinks</span>
+                            <span class="metric-value">{backlink_results['metrics']['total_backlinks']:,}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Referring Domains</span>
+                            <span class="metric-value">{backlink_results['metrics']['referring_domains']:,}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Average Domain Authority</span>
+                            <span class="metric-value">{backlink_results['metrics']['average_da']}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Dofollow Ratio</span>
+                            <span class="metric-value">{backlink_results['metrics']['dofollow_ratio']}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Toxic Links</span>
+                            <span class="metric-value">{backlink_results['metrics']['toxic_links']}</span>
+                        </div>
+                    </div>
+
+                    <!-- Technical Health -->
+                    <div class="card">
+                        <h3>Technical Health Score</h3>
+                        <div class="score-display">
+                            <span class="score-number" style="color: {get_score_color(technical_results['health_score'])}">{technical_results['health_score']}</span>
+                            <span class="score-label">/100</span>
+                        </div>
+                        <h4 style="font-size: 14px; margin-top: 20px; margin-bottom: 10px; color: #666;">Issues Found:</h4>
+                        <ul class="issue-list">
+                            {"".join([f'<li class="issue-item critical"><div class="issue-priority" style="color: #ef4444;">Critical</div><div class="issue-description">{issue["issue"]}</div></li>' for issue in technical_results['critical_issues']])}
+                            {"".join([f'<li class="issue-item important"><div class="issue-priority" style="color: #f59e0b;">Important</div><div class="issue-description">{issue["issue"]}</div></li>' for issue in technical_results['important_issues']])}
+                            {"".join([f'<li class="issue-item optimisation"><div class="issue-priority" style="color: #3b82f6;">Optimisation</div><div class="issue-description">{issue["issue"]}</div></li>' for issue in technical_results['optimisations']])}
+                        </ul>
+                        {'' if (technical_results['critical_issues'] or technical_results['important_issues'] or technical_results['optimisations']) else '<p style="color: #10b981; font-weight: 600;">No issues found!</p>'}
+                    </div>
+
+                    <!-- Content Structure -->
+                    <div class="card">
+                        <h3>Content Structure Score</h3>
+                        <div class="score-display">
+                            <span class="score-number" style="color: {get_score_color(content_structure_results['score'])}">{content_structure_results['score']}</span>
+                            <span class="score-label">/100</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Pages Requiring Work</span>
+                            <span class="metric-value">{content_structure_results['pages_requiring_restructuring']}</span>
+                        </div>
+                        <h4 style="font-size: 14px; margin-top: 20px; margin-bottom: 10px; color: #666;">Quick Wins:</h4>
+                        {"".join([f'<div class="quick-win">{win}</div>' for win in content_structure_results['quick_wins']])}
+                    </div>
+                </div>
+
+                <!-- ROI Projection -->
+                <div class="roi-section">
+                    <h2>ROI Projection (12 Months)</h2>
+                    <div class="roi-grid">
+                        <div class="roi-metric">
+                            <div class="roi-value">+{roi_results['additional_monthly_traffic']:,}</div>
+                            <div class="roi-label">Additional Monthly Traffic</div>
+                        </div>
+                        <div class="roi-metric">
+                            <div class="roi-value">£{roi_results['additional_monthly_revenue']:,.2f}</div>
+                            <div class="roi-label">Additional Monthly Revenue</div>
+                        </div>
+                        <div class="roi-metric">
+                            <div class="roi-value">£{roi_results['annual_revenue_increase']:,.2f}</div>
+                            <div class="roi-label">Annual Revenue Increase</div>
+                        </div>
+                        <div class="roi-metric">
+                            <div class="roi-value">{roi_results['roi_percent']:,.1f}%</div>
+                            <div class="roi-label">ROI</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        return HTMLResponse(content=html_report)
+
+    except Exception as e:
+        error_html = f"""
+        <!DOCTYPE html>
+        <html lang="en-GB">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Analysis Error</title>
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                }}
+                .error-container {{
+                    background: white;
+                    padding: 40px;
+                    border-radius: 12px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    max-width: 600px;
+                    text-align: center;
+                }}
+                h1 {{
+                    color: #ef4444;
+                    margin-bottom: 20px;
+                }}
+                p {{
+                    color: #666;
+                    margin-bottom: 30px;
+                }}
+                .error-detail {{
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    padding: 15px;
+                    border-radius: 6px;
+                    font-family: monospace;
+                    font-size: 14px;
+                    margin-bottom: 20px;
+                    text-align: left;
+                }}
+                a {{
+                    display: inline-block;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 12px 30px;
+                    border-radius: 6px;
+                    text-decoration: none;
+                    font-weight: 600;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="error-container">
+                <h1>Analysis Failed</h1>
+                <p>There was an error processing your files. Please check the file formats and try again.</p>
+                <div class="error-detail">{str(e)}</div>
+                <a href="/">← Back to Form</a>
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=error_html, status_code=400)
 
 
 @app.post("/analyse")
@@ -466,6 +1072,16 @@ async def analyse(
                 "detail": str(e)
             }
         )
+
+
+@app.get("/health")
+async def health_check():
+    """API health check endpoint"""
+    return {
+        "status": "operational",
+        "service": "SEO & AI Visibility Analysis Tool",
+        "version": "2.0.0 - Stage 2"
+    }
 
 
 if __name__ == "__main__":

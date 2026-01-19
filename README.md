@@ -1,13 +1,16 @@
-# SEO & AI Visibility Analysis Tool - Stage 1
+# SEO & AI Visibility Analysis Tool - Stage 2
 
-A FastAPI-based backend service for analysing SEO health, backlinks, technical issues, and projecting ROI for optimisation investments.
+A FastAPI-based service with web UI for analysing SEO health, backlinks, technical issues, and projecting ROI for optimisation investments.
 
 ## Features
 
+- **🎨 Web Interface**: Simple, clean form for non-technical users
 - **Backlink Analysis**: Evaluates domain authority, dofollow ratio, and toxic link identification
 - **Technical SEO Audit**: Identifies 4XX/5XX errors, missing meta data, and thin content
 - **Content Structure Scoring**: Analyses word count distribution and title optimisation
 - **ROI Projections**: Calculates potential revenue increases based on SEO improvements
+- **HTML Reports**: Beautiful, printable reports with visual score indicators
+- **API Access**: Programmatic access via JSON API for integrations
 
 ## Requirements
 
@@ -50,16 +53,91 @@ Start the FastAPI server:
 uvicorn main:app --reload
 ```
 
-The API will be available at: `http://127.0.0.1:8000`
+The application will be available at: `http://127.0.0.1:8000`
+
+### 🌐 Web Interface (Recommended for non-technical users)
+
+Open your browser and navigate to:
+- **Web Form**: http://127.0.0.1:8000/
+
+The web form provides:
+- Simple file upload interface
+- Visual HTML reports with colour-coded scores
+- Printable results
+- No technical knowledge required
+
+### 🔧 API Endpoints (For developers and integrations)
 
 - **API Documentation**: http://127.0.0.1:8000/docs (interactive Swagger UI)
 - **Alternative docs**: http://127.0.0.1:8000/redoc
+- **Health Check**: http://127.0.0.1:8000/health (JSON status)
+
+## Using the Web Interface
+
+### Step 1: Access the Form
+
+1. Start the server with `uvicorn main:app --reload`
+2. Open your browser and navigate to http://127.0.0.1:8000/
+3. You'll see a clean, simple form
+
+### Step 2: Complete the Form
+
+Fill in the following information:
+
+1. **Website URL**: The website you want to analyse (e.g., https://example.com)
+2. **Monthly Traffic**: Current number of monthly visitors
+3. **Conversion Rate**: Your current conversion rate as a percentage (e.g., 2.5 for 2.5%)
+4. **Average Order Value**: Average transaction value in pounds (£)
+5. **Investment Amount**: How much you plan to invest in SEO (£)
+
+### Step 3: Upload CSV Files
+
+Upload two CSV files:
+
+1. **Screaming Frog CSV Export**
+   - Run a crawl in Screaming Frog SEO Spider
+   - Export the results as CSV
+   - Ensure it contains: URL, Status Code, Title 1, Meta Description 1, Word Count
+
+2. **Backlink CSV File**
+   - Export from your backlink tool (SERanking, Ahrefs, Moz, etc.)
+   - Must contain: source_url, domain_authority, link_type, spam_score
+   - Can optionally include: source_domain
+
+### Step 4: Analyse
+
+Click the "Analyse Website" button. The tool will:
+- Process both CSV files
+- Calculate health scores
+- Identify issues and opportunities
+- Project potential ROI
+
+### Step 5: Review Report
+
+You'll receive a visual HTML report showing:
+
+- **Overall Health Score**: Weighted score from all categories
+- **Backlink Health**: Domain authority, dofollow ratio, toxic links
+- **Technical Health**: Error pages, missing metadata, thin content
+- **Content Structure**: Word count analysis, title optimisation
+- **ROI Projection**: Estimated traffic and revenue increases
+
+The report is printable and can be saved as PDF using your browser's print function.
 
 ## API Usage
 
+### Available Endpoints
+
+The API provides two endpoints for analysis:
+
+1. **`POST /analyse`** - Returns JSON response (for API integrations)
+2. **`POST /analyse-form`** - Returns HTML report (used by web interface)
+
+Both endpoints accept the same parameters and files. Use `/analyse` for programmatic access and `/analyse-form` for web-based usage.
+
 ### Endpoint: `POST /analyse`
 
-Accepts form data with CSV file uploads for analysis.
+Accepts form data with CSV file uploads for analysis and returns JSON.
 
 #### Required Form Fields:
 
@@ -229,10 +307,14 @@ https://spammy-site.com/link,spammy-site.com,12,dofollow,85
 
 ```
 discovrd-support-tool/
-├── main.py              # FastAPI application with all logic
+├── main.py              # FastAPI application with web UI and API endpoints
 ├── requirements.txt     # Python dependencies
-└── README.md           # This file
+├── README.md           # This file (user documentation)
+├── CLAUDE.md           # AI assistant guide
+└── .gitignore          # Git ignore patterns
 ```
+
+All logic is currently in `main.py` for simplicity. Future stages may refactor into modules.
 
 ## Troubleshooting
 
@@ -253,17 +335,29 @@ discovrd-support-tool/
    - Default FastAPI limit is 1MB for file uploads
    - For larger files, configure `max_upload_size` in FastAPI
 
-## Next Steps
+## Development Roadmap
 
-**Stage 2** (Planned):
-- Add AI visibility scoring using LLM APIs
-- Schema.org markup detection
-- Content relevance analysis
+**Stage 1** (✅ Complete):
+- FastAPI backend with scoring algorithms
+- JSON API endpoints
+- CSV file processing
+
+**Stage 2** (✅ Complete):
+- Web interface with HTML form
+- Visual HTML reports with colour-coded scores
+- Improved user experience for non-technical users
 
 **Stage 3** (Planned):
+- AI visibility scoring using LLM APIs
+- Schema.org markup detection
+- Content relevance analysis
+- E-E-A-T evaluation
+
+**Stage 4** (Planned):
 - Persistent storage (SQLite/PostgreSQL)
 - Historical tracking
 - Comparison reports
+- User accounts and authentication
 
 ## Licence
 

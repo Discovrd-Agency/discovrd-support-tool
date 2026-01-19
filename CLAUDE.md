@@ -6,7 +6,7 @@
 **Purpose**: Analyse websites for SEO health (backlinks, technical issues, content structure) and project ROI from optimisation investments
 **Target Users**: Non-developers, SEO professionals, digital agencies
 **Development Approach**: Staged MVP development
-**Current Stage**: Stage 1 - Minimal working backend
+**Current Stage**: Stage 2 - Web UI with HTML reports
 
 ## Tech Stack
 
@@ -14,6 +14,12 @@
 - **Framework**: FastAPI 0.109.0
 - **Runtime**: Python 3.10+
 - **Server**: Uvicorn (ASGI server)
+
+### Frontend (Stage 2)
+- **HTML5**: Semantic markup
+- **CSS3**: Inline styles with gradient backgrounds
+- **No JavaScript**: Pure HTML forms with server-side rendering
+- **Responsive**: Mobile-friendly design with CSS Grid
 
 ### Data Processing
 - **pandas**: CSV file parsing and data manipulation
@@ -36,7 +42,7 @@ discovrd-support-tool/
 └── CLAUDE.md           # This file - AI assistant guide
 ```
 
-### Future Structure (Stages 2-3)
+### Future Structure (Stages 3-4)
 ```
 discovrd-support-tool/
 ├── main.py
@@ -51,38 +57,52 @@ discovrd-support-tool/
 ├── services/
 │   ├── __init__.py
 │   ├── scoring.py      # Scoring logic
-│   ├── ai_analysis.py  # AI visibility analysis (Stage 2)
+│   ├── ai_analysis.py  # AI visibility analysis (Stage 3)
 │   └── roi.py          # ROI calculations
+├── templates/
+│   ├── form.html       # HTML form template
+│   └── report.html     # HTML report template
 ├── utils/
 │   ├── __init__.py
 │   └── csv_parser.py   # CSV handling utilities
 ├── data/
-│   └── storage.db      # SQLite database (Stage 3)
+│   └── storage.db      # SQLite database (Stage 4)
 └── tests/
     ├── __init__.py
     └── test_scoring.py
 ```
 
+**Note**: Currently all HTML is inline in main.py. Future refactoring may extract templates to separate files.
+
 ## Code Architecture
 
 ### main.py Structure
 
-The entire application is currently in `main.py` (monolithic for MVP simplicity):
+The entire application is currently in `main.py` (~1089 lines, monolithic for MVP simplicity):
 
-1. **Imports and App Initialisation** (lines 1-18)
-   - FastAPI imports
+1. **Imports and App Initialisation** (lines 1-14)
+   - FastAPI imports (including HTMLResponse)
    - Data processing libraries (pandas, numpy)
    - App instance creation
 
-2. **Scoring Functions** (lines 20-275)
-   - `score_backlinks()` - Lines 21-95
-   - `score_technical()` - Lines 98-226
-   - `score_content_structure()` - Lines 229-310
-   - `project_roi()` - Lines 313-370
+2. **Scoring Functions** (lines 17-388)
+   - `score_backlinks()` - Lines 17-93
+   - `score_technical()` - Lines 96-226
+   - `score_content_structure()` - Lines 229-328
+   - `project_roi()` - Lines 331-388
 
-3. **API Endpoints** (lines 373-450)
-   - `GET /` - Health check
-   - `POST /analyse` - Main analysis endpoint
+3. **Web Interface Endpoints** (lines 391-1082)
+   - `GET /` - HTML form (lines 391-569)
+   - `POST /analyse-form` - HTML report (lines 572-1041)
+   - `POST /analyse` - JSON API (lines 1044-1082)
+   - `GET /health` - Health check JSON (lines 1085-1089)
+
+**Stage 2 Changes**:
+- Added HTMLResponse for serving web pages
+- GET / now returns HTML form instead of JSON
+- New POST /analyse-form endpoint generates HTML reports
+- Inline CSS for clean, responsive design
+- Helper functions for score colouring in HTML reports
 
 ### Scoring Algorithms
 
@@ -212,11 +232,31 @@ roi_percent = ((annual_increase - investment) / investment) * 100
 ## API Endpoints
 
 ### GET /
-**Purpose**: Health check
-**Response**: JSON with service status and version
+**Purpose**: Web interface - HTML form for analysis
+**Response**: HTMLResponse with embedded CSS form
+**Usage**: Open in browser for non-technical users
+
+**Features**:
+- Responsive design with gradient background
+- File upload inputs for CSV files
+- Input validation (required fields, file types)
+- Clean, modern UI with no JavaScript required
+
+### POST /analyse-form
+**Purpose**: Process form submission and return HTML report
+**Content-Type**: `multipart/form-data`
+**Response**: HTMLResponse with visual report
+
+**Features**:
+- Colour-coded health scores (green/amber/red)
+- Interactive score cards
+- Categorised issues (Critical/Important/Optimisation)
+- Printable report format
+- ROI projections in visual cards
+- Error handling with styled error pages
 
 ### POST /analyse
-**Purpose**: Main analysis endpoint
+**Purpose**: JSON API for programmatic access
 **Content-Type**: `multipart/form-data`
 
 **Form Fields**:
@@ -267,6 +307,20 @@ roi_percent = ((annual_increase - investment) / investment) * 100
 }
 ```
 
+### GET /health
+**Purpose**: API health check (JSON)
+**Response**: JSON with service status and version
+
+```json
+{
+  "status": "operational",
+  "service": "SEO & AI Visibility Analysis Tool",
+  "version": "2.0.0 - Stage 2"
+}
+```
+
+**Note**: Use `/health` for API monitoring. The root `/` endpoint now serves HTML instead of JSON.
+
 ## Development Workflow
 
 ### Local Development Setup
@@ -287,9 +341,11 @@ roi_percent = ((annual_increase - investment) / investment) * 100
    uvicorn main:app --reload
    ```
 
-4. **Access API documentation**:
+4. **Access the application**:
+   - Web Interface: http://127.0.0.1:8000/
    - Swagger UI: http://127.0.0.1:8000/docs
    - ReDoc: http://127.0.0.1:8000/redoc
+   - Health Check: http://127.0.0.1:8000/health
 
 ### Testing the API
 
@@ -388,9 +444,21 @@ git push -u origin claude/claude-md-mkl70zjah3k6lvmu-Kf7ET
 2. **Type Coercion**: Convert strings to numbers with `pd.to_numeric(errors='coerce')`
 3. **Empty Data Handling**: Always check for empty DataFrames
 
-## Future Development (Stages 2-3)
+## Future Development (Stages 3-4)
 
-### Stage 2: AI Visibility Analysis
+### Stage 2: Web UI ✅ COMPLETE
+- **HTML Forms**: Clean, responsive web interface
+- **Visual Reports**: Colour-coded scores and issue categorisation
+- **No JavaScript**: Pure server-side rendering
+- **Print Support**: Printable HTML reports
+
+**Completed Features**:
+- GET / endpoint serves HTML form
+- POST /analyse-form returns HTML report
+- Inline CSS with gradient design
+- Mobile-responsive layout
+
+### Stage 3: AI Visibility Analysis (Planned)
 - **LLM Integration**: OpenAI/Anthropic API for content relevance
 - **Schema.org Detection**: Structured data analysis
 - **E-E-A-T Scoring**: Expertise, Experience, Authoritativeness, Trust
@@ -400,7 +468,7 @@ git push -u origin claude/claude-md-mkl70zjah3k6lvmu-Kf7ET
 
 **Changes to `project_roi()`**: Replace fixed `ai_visibility_baseline` with actual score
 
-### Stage 3: Persistence & Tracking
+### Stage 4: Persistence & Tracking (Planned)
 - **Database**: SQLite initially, PostgreSQL for production
 - **Historical Data**: Track scores over time
 - **Comparison Reports**: Before/after analysis
@@ -411,14 +479,7 @@ git push -u origin claude/claude-md-mkl70zjah3k6lvmu-Kf7ET
 - `database.py` - SQLAlchemy models
 - `migrations/` - Alembic migrations
 - `auth.py` - User authentication
-
-### Stage 4: Frontend (Optional)
-- **Framework**: React or simple HTML/CSS/JS
-- **Features**:
-  - File upload interface
-  - Visual dashboards
-  - PDF report generation
-  - Historical charts
+- `templates/` - Extracted HTML templates (Jinja2)
 
 ## Common Issues & Solutions
 
@@ -445,8 +506,10 @@ pip install -r requirements.txt
 ## Testing Strategy
 
 ### Current Testing
-- Manual testing via Postman/cURL
-- Sample CSV files for validation
+- **Web Interface**: Manual testing via browser at http://127.0.0.1:8000/
+- **API Testing**: Postman/cURL for JSON endpoints
+- **Sample Files**: CSV files for validation
+- **Visual Inspection**: HTML report rendering and styling
 
 ### Future Testing (Stage 2+)
 - **Unit Tests**: pytest for individual functions
@@ -599,31 +662,43 @@ logger.info("Analysis started for %s", website_url)
 
 ## Changelog
 
-### Stage 1 (Current) - 2026-01-19
+### Stage 1 (Complete) - 2026-01-19
 - ✅ Initial project setup
 - ✅ FastAPI application structure
 - ✅ Backlink scoring implementation
 - ✅ Technical SEO scoring implementation
 - ✅ Content structure scoring implementation
 - ✅ ROI projection calculation
-- ✅ POST /analyse endpoint
+- ✅ POST /analyse endpoint (JSON)
 - ✅ CSV file upload handling
 - ✅ Comprehensive documentation
 
-### Stage 2 (Planned)
+### Stage 2 (Current) - 2026-01-19
+- ✅ HTML web interface with form
+- ✅ GET / endpoint serves web UI
+- ✅ POST /analyse-form endpoint with HTML reports
+- ✅ Responsive design with inline CSS
+- ✅ Colour-coded health scores
+- ✅ Visual issue categorisation
+- ✅ Printable HTML reports
+- ✅ GET /health endpoint for API monitoring
+- ✅ Updated documentation for web interface
+
+### Stage 3 (Planned)
 - ⏳ AI visibility analysis with LLM integration
 - ⏳ Schema.org detection
 - ⏳ E-E-A-T scoring
 - ⏳ Enhanced ROI calculations with AI visibility
 
-### Stage 3 (Planned)
+### Stage 4 (Planned)
 - ⏳ Database persistence (SQLite/PostgreSQL)
 - ⏳ Historical tracking
 - ⏳ Comparison reports
 - ⏳ User accounts and authentication
+- ⏳ Template extraction (Jinja2)
 
 ---
 
 **Last Updated**: 2026-01-19
-**Current Version**: 1.0.0 - Stage 1
+**Current Version**: 2.0.0 - Stage 2
 **Maintained By**: Discovrd Agency Development Team
