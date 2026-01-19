@@ -1,6 +1,6 @@
-# SEO & AI Visibility Analysis Tool - Stage 2
+# SEO & AI Visibility Analysis Tool - Stage 3
 
-A FastAPI-based service with web UI for analysing SEO health, backlinks, technical issues, and projecting ROI for optimisation investments.
+A FastAPI-based service with web UI for analysing SEO health, backlinks, technical issues, AI visibility, and projecting ROI for optimisation investments.
 
 ## Features
 
@@ -8,7 +8,8 @@ A FastAPI-based service with web UI for analysing SEO health, backlinks, technic
 - **Backlink Analysis**: Evaluates domain authority, dofollow ratio, and toxic link identification
 - **Technical SEO Audit**: Identifies 4XX/5XX errors, missing meta data, and thin content
 - **Content Structure Scoring**: Analyses word count distribution and title optimisation
-- **ROI Projections**: Calculates potential revenue increases based on SEO improvements
+- **🤖 AI Visibility Analysis**: Tests brand visibility across LLMs with query-based testing (Stage 3)
+- **ROI Projections**: Calculates potential revenue increases including AI visibility impact
 - **HTML Reports**: Beautiful, printable reports with visual score indicators
 - **API Access**: Programmatic access via JSON API for integrations
 
@@ -90,7 +91,16 @@ Fill in the following information:
 4. **Average Order Value**: Average transaction value in pounds (£)
 5. **Investment Amount**: How much you plan to invest in SEO (£)
 
-### Step 3: Upload CSV Files
+### Step 3: Complete AI Visibility Fields (Stage 3)
+
+Fill in the AI visibility analysis fields:
+
+1. **Brand Name**: Your company or brand name (required)
+2. **Competitor Names/URLs**: Comma-separated list of competitors (optional)
+3. **Custom Test Queries**: One query per line to test AI visibility (optional)
+   - If not provided, default queries will be generated based on your brand
+
+### Step 4: Upload CSV Files
 
 Upload two CSV files:
 
@@ -104,7 +114,7 @@ Upload two CSV files:
    - Must contain: source_url, domain_authority, link_type, spam_score
    - Can optionally include: source_domain
 
-### Step 4: Analyse
+### Step 5: Analyse
 
 Click the "Analyse Website" button. The tool will:
 - Process both CSV files
@@ -112,15 +122,16 @@ Click the "Analyse Website" button. The tool will:
 - Identify issues and opportunities
 - Project potential ROI
 
-### Step 5: Review Report
+### Step 6: Review Report
 
 You'll receive a visual HTML report showing:
 
-- **Overall Health Score**: Weighted score from all categories
+- **Overall Health Score**: Weighted score from all categories (including AI visibility)
 - **Backlink Health**: Domain authority, dofollow ratio, toxic links
 - **Technical Health**: Error pages, missing metadata, thin content
 - **Content Structure**: Word count analysis, title optimisation
-- **ROI Projection**: Estimated traffic and revenue increases
+- **AI Visibility**: LLM performance, query type breakdown, and recommendations (Stage 3)
+- **ROI Projection**: Estimated traffic and revenue increases based on all factors
 
 The report is printable and can be saved as PDF using your browser's print function.
 
@@ -148,6 +159,9 @@ Accepts form data with CSV file uploads for analysis and returns JSON.
 | `conversion_rate` | float | Conversion rate (%) | `2.5` |
 | `avg_order_value` | float | Average order value (£) | `50.00` |
 | `investment_amount` | float | SEO investment budget (£) | `5000.00` |
+| `brand_name` | string | Brand/company name | `Acme Corp` |
+| `competitor_names` | string | Comma-separated competitors (optional) | `CompA, CompB` |
+| `test_queries` | string | Newline-separated test queries (optional) | `best tools\ntop software` |
 
 #### Required Files:
 
@@ -244,6 +258,27 @@ curl -X POST "http://127.0.0.1:8000/analyse" \
     "quick_wins": [
       "Shorten 23 titles over 65 characters for better SERP display.",
       "Expand 42 thin pages to at least 300 words."
+    ]
+  },
+  "ai_visibility": {
+    "visibility_score": 41.0,
+    "llm_performance": [
+      {
+        "name": "MockClaude",
+        "score": 41.0,
+        "citations": 4,
+        "queries_tested": 10
+      }
+    ],
+    "by_query_type": {
+      "brand": 0.8,
+      "product": 0.3,
+      "comparison": 0.2,
+      "recommendation": 0.1
+    },
+    "recommendations": [
+      "Your brand has moderate AI visibility. Focus on creating authoritative content.",
+      "Improve comparison visibility: Publish comparison guides and competitive analysis."
     ]
   },
   "roi_projection": {
@@ -347,13 +382,20 @@ All logic is currently in `main.py` for simplicity. Future stages may refactor i
 - Visual HTML reports with colour-coded scores
 - Improved user experience for non-technical users
 
-**Stage 3** (Planned):
-- AI visibility scoring using LLM APIs
+**Stage 3** (✅ Complete):
+- AI visibility scoring with mock LLM testing (ready for real API integration)
+- Query-based testing across different query types
+- Brand vs competitor visibility comparison
+- AI visibility recommendations
+- Integrated into ROI calculations
+
+**Stage 4** (Planned):
+- Real LLM API integration (Claude, ChatGPT, Gemini, Perplexity)
 - Schema.org markup detection
 - Content relevance analysis
 - E-E-A-T evaluation
 
-**Stage 4** (Planned):
+**Stage 5** (Planned):
 - Persistent storage (SQLite/PostgreSQL)
 - Historical tracking
 - Comparison reports

@@ -1,6 +1,6 @@
 """
-SEO & AI Visibility Analysis Tool - Stage 2
-FastAPI backend with web UI for analysing backlinks, technical SEO, and content structure
+SEO & AI Visibility Analysis Tool - Stage 3
+FastAPI backend with web UI for analysing backlinks, technical SEO, content structure, and AI visibility
 """
 
 from fastapi import FastAPI, UploadFile, File, Form
@@ -12,6 +12,257 @@ import io
 from decimal import Decimal
 
 app = FastAPI(title="SEO & AI Visibility Analysis Tool")
+
+
+# ============================================================================
+# AI VISIBILITY TESTING - Stage 3
+# ============================================================================
+
+class LLMTester:
+    """
+    Mock LLM testing abstraction for AI visibility analysis.
+
+    This class provides a unified interface for testing brand visibility
+    across different LLM platforms. Currently implements mock responses,
+    but is designed to be extended with real API calls.
+
+    TODO - Future Integration:
+    - Add real Claude API integration (Anthropic SDK)
+    - Add real OpenAI API integration (ChatGPT)
+    - Add real Gemini API integration (Google)
+    - Add Perplexity API integration
+    - Implement rate limiting and error handling
+    - Add caching for repeated queries
+    - Implement async/parallel testing across LLMs
+    """
+
+    def __init__(self, llm_name: str = "MockClaude"):
+        self.llm_name = llm_name
+
+    def test_queries(
+        self,
+        queries: list[str],
+        brand: str,
+        competitors: list[str]
+    ) -> dict:
+        """
+        Test a list of queries against an LLM and measure brand visibility.
+
+        Args:
+            queries: List of search queries to test
+            brand: The brand name to look for in responses
+            competitors: List of competitor names to track
+
+        Returns:
+            Dict with:
+                - score: Overall visibility score (0-100)
+                - citations: Number of times brand was mentioned
+                - queries_tested: Total queries tested
+                - competitor_mentions: Dict of competitor mention counts
+                - query_results: Detailed results per query
+
+        TODO - Real Implementation:
+        1. For each query:
+           - Send query to LLM API
+           - Parse response for brand mentions
+           - Check position of brand vs competitors
+           - Track citation quality (direct link, indirect mention, etc.)
+        2. Calculate visibility metrics:
+           - Brand mention frequency
+           - Position in response (higher = better)
+           - Presence in structured data (lists, tables)
+           - Link/citation presence
+        3. Aggregate across all queries
+        """
+
+        # MOCK IMPLEMENTATION - Replace with real API calls
+        # This simulates varied results based on query characteristics
+
+        import random
+        import re
+
+        total_queries = len(queries)
+        citations = 0
+        competitor_mentions = {comp: 0 for comp in competitors}
+        query_results = []
+
+        for query in queries:
+            # Mock: Simulate brand mention based on query type
+            query_lower = query.lower()
+
+            # Brand queries have high visibility
+            if brand.lower() in query_lower:
+                brand_mentioned = random.random() < 0.8  # 80% chance
+                position = random.randint(1, 3)  # Usually high position
+            # Product/comparison queries have moderate visibility
+            elif any(word in query_lower for word in ['best', 'top', 'compare', 'vs', 'alternative']):
+                brand_mentioned = random.random() < 0.4  # 40% chance
+                position = random.randint(2, 6)
+            # General queries have lower visibility
+            else:
+                brand_mentioned = random.random() < 0.2  # 20% chance
+                position = random.randint(4, 10)
+
+            if brand_mentioned:
+                citations += 1
+
+            # Mock competitor mentions
+            for comp in competitors:
+                if random.random() < 0.5:  # 50% chance competitor is mentioned
+                    competitor_mentions[comp] += 1
+
+            query_results.append({
+                "query": query,
+                "brand_mentioned": brand_mentioned,
+                "position": position if brand_mentioned else None,
+                "competitors_mentioned": random.randint(0, len(competitors))
+            })
+
+        # Calculate overall score
+        # Score is based on: mention frequency (60%) + average position (40%)
+        mention_ratio = citations / total_queries if total_queries > 0 else 0
+
+        # Position score: lower position number = higher score
+        positions = [r["position"] for r in query_results if r["position"] is not None]
+        avg_position = sum(positions) / len(positions) if positions else 10
+        position_score = max(0, 100 - (avg_position * 10))  # Position 1 = 90, Position 10 = 0
+
+        overall_score = (mention_ratio * 60) + (position_score * 0.4)
+        overall_score = min(100, max(0, overall_score))  # Clamp to 0-100
+
+        return {
+            "llm_name": self.llm_name,
+            "score": round(overall_score, 1),
+            "citations": citations,
+            "queries_tested": total_queries,
+            "competitor_mentions": competitor_mentions,
+            "query_results": query_results
+        }
+
+
+def score_ai_visibility(
+    brand: str,
+    competitor_names: str = "",
+    test_queries: str = ""
+) -> dict:
+    """
+    Calculate AI visibility score using LLM testing.
+
+    Args:
+        brand: Brand name to test
+        competitor_names: Comma-separated competitor names (optional)
+        test_queries: Newline-separated test queries (optional)
+
+    Returns:
+        Dict with:
+            - visibility_score: Overall AI visibility score (0-100)
+            - llm_performance: List of results per LLM tested
+            - by_query_type: Breakdown by query type
+            - recommendations: List of improvement suggestions
+    """
+
+    # Parse inputs
+    competitors = [c.strip() for c in competitor_names.split(',') if c.strip()] if competitor_names else []
+
+    if test_queries.strip():
+        queries = [q.strip() for q in test_queries.split('\n') if q.strip()]
+    else:
+        # Default queries if none provided
+        queries = [
+            f"best {brand} features",
+            f"what is {brand}",
+            f"{brand} reviews",
+            f"how to use {brand}",
+            f"top alternatives to {brand}",
+            f"{brand} vs competitors",
+            f"is {brand} worth it",
+            f"{brand} pricing",
+            f"companies like {brand}",
+            f"{brand} customer reviews"
+        ]
+
+    # Categorise queries by type
+    query_types = {
+        "brand": [],
+        "product": [],
+        "comparison": [],
+        "recommendation": []
+    }
+
+    for query in queries:
+        query_lower = query.lower()
+        if brand.lower() in query_lower:
+            query_types["brand"].append(query)
+        elif any(word in query_lower for word in ['vs', 'compare', 'alternative']):
+            query_types["comparison"].append(query)
+        elif any(word in query_lower for word in ['best', 'top', 'recommend']):
+            query_types["recommendation"].append(query)
+        else:
+            query_types["product"].append(query)
+
+    # TODO: Test multiple LLMs in parallel
+    # Currently testing one mock LLM
+    llm_testers = [
+        LLMTester("MockClaude"),
+        # TODO: Add real LLM testers
+        # LLMTester("Claude"),  # Anthropic API
+        # LLMTester("ChatGPT"),  # OpenAI API
+        # LLMTester("Gemini"),  # Google API
+        # LLMTester("Perplexity")  # Perplexity API
+    ]
+
+    llm_performance = []
+    total_score = 0
+
+    for tester in llm_testers:
+        result = tester.test_queries(queries, brand, competitors)
+        llm_performance.append({
+            "name": result["llm_name"],
+            "score": result["score"],
+            "citations": result["citations"],
+            "queries_tested": result["queries_tested"]
+        })
+        total_score += result["score"]
+
+    # Average across all LLMs
+    visibility_score = total_score / len(llm_testers) if llm_testers else 0
+
+    # Calculate by_query_type scores
+    by_query_type = {}
+    for qtype, qlist in query_types.items():
+        if qlist:
+            # Mock scores for each query type
+            type_tester = LLMTester("MockClaude")
+            type_result = type_tester.test_queries(qlist, brand, competitors)
+            by_query_type[qtype] = round(type_result["score"] / 100, 2)  # Normalize to 0-1
+        else:
+            by_query_type[qtype] = 0.0
+
+    # Generate recommendations
+    recommendations = []
+
+    if visibility_score < 40:
+        recommendations.append("Critical: Your brand has very low AI visibility. Consider creating comprehensive content that LLMs can reference.")
+    elif visibility_score < 60:
+        recommendations.append("Your brand has moderate AI visibility. Focus on creating authoritative content in your domain.")
+    else:
+        recommendations.append("Good AI visibility! Maintain your content strategy and monitor for changes.")
+
+    if by_query_type.get("brand", 0) < 0.5:
+        recommendations.append("Improve brand query visibility: Create detailed 'About' and FAQ content.")
+
+    if by_query_type.get("comparison", 0) < 0.3:
+        recommendations.append("Low comparison visibility: Publish comparison guides and competitive analysis content.")
+
+    if competitors and len(competitors) > 0:
+        recommendations.append(f"Monitor {len(competitors)} competitors for AI visibility trends.")
+
+    return {
+        "visibility_score": round(visibility_score, 1),
+        "llm_performance": llm_performance,
+        "by_query_type": by_query_type,
+        "recommendations": recommendations
+    }
 
 
 def score_backlinks(df: pd.DataFrame) -> dict:
@@ -332,6 +583,7 @@ def project_roi(
     backlink_score: float,
     technical_score: float,
     content_structure_score: float,
+    ai_visibility_score: float,
     monthly_traffic: int,
     conversion_rate: float,
     avg_order_value: float,
@@ -343,18 +595,15 @@ def project_roi(
     Uses weighted scoring:
     - Backlink: 30%
     - Technical: 25%
-    - AI Visibility: 25% (baseline 30% for MVP)
+    - AI Visibility: 25% (now using real score from Stage 3)
     - Content Structure: 20%
     """
-
-    # AI visibility baseline for MVP (will be replaced in Stage 3)
-    ai_visibility_baseline = 30.0
 
     # Calculate overall health score
     overall_health = (
         (backlink_score * 0.30) +
         (technical_score * 0.25) +
-        (ai_visibility_baseline * 0.25) +
+        (ai_visibility_score * 0.25) +
         (content_structure_score * 0.20)
     )
 
@@ -570,6 +819,26 @@ async def root():
                     <div class="file-hint">Must contain: source_url, domain_authority, link_type, spam_score</div>
                 </div>
 
+                <h2 style="color: #667eea; font-size: 20px; margin-top: 30px; margin-bottom: 15px;">AI Visibility Analysis (Stage 3)</h2>
+
+                <div class="form-group">
+                    <label for="brand_name">Brand Name</label>
+                    <input type="text" id="brand_name" name="brand_name" placeholder="Your Company Name" required>
+                    <div class="file-hint">The name of your brand/company to test for in AI responses</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="competitor_names">Competitor Names/URLs (optional)</label>
+                    <input type="text" id="competitor_names" name="competitor_names" placeholder="Competitor A, Competitor B, competitor-site.com">
+                    <div class="file-hint">Comma-separated list of competitor names or URLs to compare against</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="test_queries">Custom Test Queries (optional)</label>
+                    <textarea id="test_queries" name="test_queries" rows="4" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;" placeholder="Enter test queries, one per line:&#10;best project management software&#10;how to improve team productivity&#10;project management tools comparison"></textarea>
+                    <div class="file-hint">One query per line. If not provided, default queries based on your industry will be used.</div>
+                </div>
+
                 <button type="submit">Analyse Website</button>
             </form>
         </div>
@@ -586,14 +855,18 @@ async def analyse_form(
     conversion_rate: float = Form(...),
     avg_order_value: float = Form(...),
     investment_amount: float = Form(...),
+    brand_name: str = Form(...),
+    competitor_names: str = Form(""),
+    test_queries: str = Form(""),
     sf_file: UploadFile = File(...),
     backlink_file: UploadFile = File(...)
 ):
     """
-    Analyse SEO health and project ROI - Returns HTML report.
+    Analyse SEO health, AI visibility, and project ROI - Returns HTML report.
 
     Accepts:
-    - Form fields: website_url, monthly_traffic, conversion_rate, avg_order_value, investment_amount
+    - Form fields: website_url, monthly_traffic, conversion_rate, avg_order_value,
+                   investment_amount, brand_name, competitor_names, test_queries
     - Files: sf_file (Screaming Frog export), backlink_file (backlink data)
 
     Returns: HTML report with scores, issues, and ROI projections
@@ -613,11 +886,19 @@ async def analyse_form(
         technical_results = score_technical(sf_df)
         content_structure_results = score_content_structure(sf_df)
 
-        # Calculate ROI
+        # Calculate AI Visibility (Stage 3)
+        ai_visibility_results = score_ai_visibility(
+            brand=brand_name,
+            competitor_names=competitor_names,
+            test_queries=test_queries
+        )
+
+        # Calculate ROI with AI visibility score
         roi_results = project_roi(
             backlink_score=backlink_results["health_score"],
             technical_score=technical_results["health_score"],
             content_structure_score=content_structure_results["score"],
+            ai_visibility_score=ai_visibility_results["visibility_score"],
             monthly_traffic=monthly_traffic,
             conversion_rate=conversion_rate,
             avg_order_value=avg_order_value,
@@ -905,6 +1186,36 @@ async def analyse_form(
                         <h4 style="font-size: 14px; margin-top: 20px; margin-bottom: 10px; color: #666;">Quick Wins:</h4>
                         {"".join([f'<div class="quick-win">{win}</div>' for win in content_structure_results['quick_wins']])}
                     </div>
+
+                    <!-- AI Visibility (Stage 3) -->
+                    <div class="card">
+                        <h3>AI Visibility Score</h3>
+                        <div class="score-display">
+                            <span class="score-number" style="color: {get_score_color(ai_visibility_results['visibility_score'])}">{ai_visibility_results['visibility_score']}</span>
+                            <span class="score-label">/100</span>
+                        </div>
+                        <h4 style="font-size: 14px; margin-top: 20px; margin-bottom: 10px; color: #666;">LLM Performance:</h4>
+                        {"".join([f'<div class="metric-row"><span class="metric-label">{llm["name"]}</span><span class="metric-value">{llm["score"]}/100 ({llm["citations"]} citations)</span></div>' for llm in ai_visibility_results['llm_performance']])}
+                        <h4 style="font-size: 14px; margin-top: 20px; margin-bottom: 10px; color: #666;">By Query Type:</h4>
+                        <div class="metric-row">
+                            <span class="metric-label">Brand Queries</span>
+                            <span class="metric-value">{ai_visibility_results['by_query_type'].get('brand', 0) * 100:.0f}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Product Queries</span>
+                            <span class="metric-value">{ai_visibility_results['by_query_type'].get('product', 0) * 100:.0f}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Comparison Queries</span>
+                            <span class="metric-value">{ai_visibility_results['by_query_type'].get('comparison', 0) * 100:.0f}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Recommendation Queries</span>
+                            <span class="metric-value">{ai_visibility_results['by_query_type'].get('recommendation', 0) * 100:.0f}%</span>
+                        </div>
+                        <h4 style="font-size: 14px; margin-top: 20px; margin-bottom: 10px; color: #666;">Recommendations:</h4>
+                        {"".join([f'<div class="quick-win">{rec}</div>' for rec in ai_visibility_results['recommendations']])}
+                    </div>
                 </div>
 
                 <!-- ROI Projection -->
@@ -1011,14 +1322,18 @@ async def analyse(
     conversion_rate: float = Form(...),
     avg_order_value: float = Form(...),
     investment_amount: float = Form(...),
+    brand_name: str = Form(...),
+    competitor_names: str = Form(""),
+    test_queries: str = Form(""),
     sf_file: UploadFile = File(...),
     backlink_file: UploadFile = File(...)
 ):
     """
-    Analyse SEO health and project ROI.
+    Analyse SEO health, AI visibility, and project ROI.
 
     Accepts:
-    - Form fields: website_url, monthly_traffic, conversion_rate, avg_order_value, investment_amount
+    - Form fields: website_url, monthly_traffic, conversion_rate, avg_order_value,
+                   investment_amount, brand_name, competitor_names, test_queries
     - Files: sf_file (Screaming Frog export), backlink_file (backlink data)
 
     Returns: JSON with scores, issues, and ROI projections
@@ -1038,11 +1353,19 @@ async def analyse(
         technical_results = score_technical(sf_df)
         content_structure_results = score_content_structure(sf_df)
 
-        # Calculate ROI
+        # Calculate AI Visibility (Stage 3)
+        ai_visibility_results = score_ai_visibility(
+            brand=brand_name,
+            competitor_names=competitor_names,
+            test_queries=test_queries
+        )
+
+        # Calculate ROI with AI visibility score
         roi_results = project_roi(
             backlink_score=backlink_results["health_score"],
             technical_score=technical_results["health_score"],
             content_structure_score=content_structure_results["score"],
+            ai_visibility_score=ai_visibility_results["visibility_score"],
             monthly_traffic=monthly_traffic,
             conversion_rate=conversion_rate,
             avg_order_value=avg_order_value,
@@ -1059,6 +1382,7 @@ async def analyse(
             "backlinks": backlink_results,
             "technical": technical_results,
             "content_structure": content_structure_results,
+            "ai_visibility": ai_visibility_results,
             "roi_projection": roi_results
         }
 
@@ -1080,7 +1404,7 @@ async def health_check():
     return {
         "status": "operational",
         "service": "SEO & AI Visibility Analysis Tool",
-        "version": "2.0.0 - Stage 2"
+        "version": "3.0.0 - Stage 3"
     }
 
 

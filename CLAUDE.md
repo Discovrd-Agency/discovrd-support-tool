@@ -3,10 +3,10 @@
 ## Project Overview
 
 **Project Name**: SEO & AI Visibility Analysis Tool
-**Purpose**: Analyse websites for SEO health (backlinks, technical issues, content structure) and project ROI from optimisation investments
+**Purpose**: Analyse websites for SEO health (backlinks, technical issues, content structure, AI visibility) and project ROI from optimisation investments
 **Target Users**: Non-developers, SEO professionals, digital agencies
 **Development Approach**: Staged MVP development
-**Current Stage**: Stage 2 - Web UI with HTML reports
+**Current Stage**: Stage 3 - AI Visibility Analysis (Mock Implementation)
 
 ## Tech Stack
 
@@ -78,31 +78,38 @@ discovrd-support-tool/
 
 ### main.py Structure
 
-The entire application is currently in `main.py` (~1089 lines, monolithic for MVP simplicity):
+The entire application is currently in `main.py` (~1413 lines, monolithic for MVP simplicity):
 
 1. **Imports and App Initialisation** (lines 1-14)
    - FastAPI imports (including HTMLResponse)
    - Data processing libraries (pandas, numpy)
    - App instance creation
 
-2. **Scoring Functions** (lines 17-388)
-   - `score_backlinks()` - Lines 17-93
-   - `score_technical()` - Lines 96-226
-   - `score_content_structure()` - Lines 229-328
-   - `project_roi()` - Lines 331-388
+2. **AI Visibility Module (Stage 3)** (lines 17-260)
+   - `LLMTester` class - Mock LLM testing abstraction (lines 23-142)
+   - `score_ai_visibility()` - AI visibility scoring (lines 145-260)
+   - TODO comments for real API integration
 
-3. **Web Interface Endpoints** (lines 391-1082)
-   - `GET /` - HTML form (lines 391-569)
-   - `POST /analyse-form` - HTML report (lines 572-1041)
-   - `POST /analyse` - JSON API (lines 1044-1082)
-   - `GET /health` - Health check JSON (lines 1085-1089)
+3. **Traditional Scoring Functions** (lines 263-638)
+   - `score_backlinks()` - Lines 263-339
+   - `score_technical()` - Lines 342-472
+   - `score_content_structure()` - Lines 475-574
+   - `project_roi()` - Lines 577-638 (now includes AI visibility parameter)
 
-**Stage 2 Changes**:
-- Added HTMLResponse for serving web pages
-- GET / now returns HTML form instead of JSON
-- New POST /analyse-form endpoint generates HTML reports
-- Inline CSS for clean, responsive design
-- Helper functions for score colouring in HTML reports
+4. **Web Interface Endpoints** (lines 641-1407)
+   - `GET /` - HTML form with AI fields (lines 641-848)
+   - `POST /analyse-form` - HTML report with AI section (lines 851-1291)
+   - `POST /analyse` - JSON API with AI visibility (lines 1294-1391)
+   - `GET /health` - Health check JSON (lines 1394-1402)
+
+**Stage 3 Changes**:
+- Added `LLMTester` class for mock LLM testing
+- Implemented `score_ai_visibility()` function
+- Added brand_name, competitor_names, test_queries inputs
+- Updated `project_roi()` to accept ai_visibility_score
+- Added AI visibility section to HTML report
+- Updated all endpoints to include AI visibility
+- Added comprehensive TODO comments for real API integration
 
 ### Scoring Algorithms
 
@@ -192,18 +199,75 @@ structure_score = (word_count_score * 0.5) + (title_score * 0.3) + (consistency_
 - Identifies top 5 actionable improvements
 - Provides specific counts and recommendations
 
-#### 4. ROI Projection (`project_roi()`)
+#### 4. AI Visibility Score (`score_ai_visibility()`) - Stage 3
+
+**Input Parameters**:
+- `brand` (string) - Brand name to test
+- `competitor_names` (string) - Comma-separated competitor names (optional)
+- `test_queries` (string) - Newline-separated test queries (optional)
+
+**Logic**:
+```python
+# Parse inputs
+competitors = [c.strip() for c in competitor_names.split(',') if c.strip()]
+queries = [q.strip() for q in test_queries.split('\n') if q.strip()] or default_queries
+
+# Test queries using LLMTester
+tester = LLMTester("MockClaude")  # TODO: Replace with real LLM APIs
+result = tester.test_queries(queries, brand, competitors)
+
+# Calculate visibility score
+visibility_score = (mention_ratio * 60) + (position_score * 40)
+```
+
+**LLMTester Class**:
+- Provides unified interface for testing across different LLMs
+- Currently implements mock responses for MVP
+- Designed to be extended with real API calls
+
+**Mock Implementation**:
+- Simulates brand mentions based on query type:
+  - Brand queries: 80% visibility
+  - Product/comparison queries: 40% visibility
+  - General queries: 20% visibility
+- Calculates position score (lower position = higher score)
+- Tracks competitor mentions
+
+**TODO - Real API Integration**:
+```python
+# TODO: Add real Claude API integration (Anthropic SDK)
+# TODO: Add real OpenAI API integration (ChatGPT)
+# TODO: Add real Gemini API integration (Google)
+# TODO: Add Perplexity API integration
+# TODO: Implement rate limiting and error handling
+# TODO: Add caching for repeated queries
+# TODO: Implement async/parallel testing across LLMs
+```
+
+**Output**: Dict with:
+- `visibility_score` (float 0-100) - Overall AI visibility
+- `llm_performance` (list) - Results per LLM tested
+- `by_query_type` (dict) - Breakdown by query type (brand, product, comparison, recommendation)
+- `recommendations` (list) - Actionable suggestions
+
+**Edge Cases**:
+- Empty test queries trigger default query generation
+- Competitor names can be URLs or plain text
+- Handles missing competitors gracefully
+
+#### 5. ROI Projection (`project_roi()`)
 
 **Input Parameters**:
 - `backlink_score` (float 0-100)
 - `technical_score` (float 0-100)
 - `content_structure_score` (float 0-100)
+- `ai_visibility_score` (float 0-100) - Added in Stage 3
 - `monthly_traffic` (int)
 - `conversion_rate` (float, percentage)
 - `avg_order_value` (float, £)
 - `investment_amount` (float, £)
 
-**Weighting Formula**:
+**Weighting Formula** (Updated in Stage 3):
 ```python
 overall_health = (
     backlink_score * 0.30 +
@@ -458,17 +522,50 @@ git push -u origin claude/claude-md-mkl70zjah3k6lvmu-Kf7ET
 - Inline CSS with gradient design
 - Mobile-responsive layout
 
-### Stage 3: AI Visibility Analysis (Planned)
-- **LLM Integration**: OpenAI/Anthropic API for content relevance
+### Stage 3: AI Visibility Analysis ✅ COMPLETE (Mock)
+- **LLMTester Class**: Unified interface for LLM testing
+- **Mock Implementation**: Query-based visibility testing
+- **Query Types**: Brand, product, comparison, recommendation breakdown
+- **Competitor Tracking**: Monitor competitor mentions
+- **Recommendations Engine**: Automated improvement suggestions
+- **ROI Integration**: AI visibility now part of overall health score
+
+**Completed Features**:
+- LLMTester class with comprehensive TODO comments
+- score_ai_visibility() function
+- Form inputs for brand, competitors, and test queries
+- AI visibility section in HTML reports
+- Mock scoring based on query characteristics
+- Ready for real API integration
+
+**TODO for Stage 4**:
+- Replace mock with real Claude API (Anthropic SDK)
+- Add real ChatGPT API (OpenAI SDK)
+- Add real Gemini API (Google SDK)
+- Add Perplexity API
+- Implement async/parallel testing
+- Add rate limiting and caching
+
+### Stage 4: Real LLM Integration (Planned)
+- **Real API Calls**: Replace mock with actual LLM APIs
+- **Claude API**: Anthropic SDK integration
+- **ChatGPT API**: OpenAI SDK integration
+- **Gemini API**: Google SDK integration
+- **Perplexity API**: Direct API integration
+- **Parallel Testing**: Async testing across multiple LLMs
+- **Rate Limiting**: Respect API rate limits
+- **Caching**: Cache query results to reduce API costs
+- **Error Handling**: Graceful fallbacks for API failures
 - **Schema.org Detection**: Structured data analysis
-- **E-E-A-T Scoring**: Expertise, Experience, Authoritativeness, Trust
-- **AI Search Optimisation**: ChatGPT, Perplexity, Claude visibility
+- **E-E-A-T Scoring**: Content quality metrics
 
-**New Endpoint**: `POST /analyse-ai`
+**New Dependencies**:
+- `anthropic` - Claude API SDK
+- `openai` - ChatGPT API SDK
+- `google-generativeai` - Gemini API SDK
+- `aiohttp` - Async HTTP for parallel requests
 
-**Changes to `project_roi()`**: Replace fixed `ai_visibility_baseline` with actual score
-
-### Stage 4: Persistence & Tracking (Planned)
+### Stage 5: Persistence & Tracking (Planned)
 - **Database**: SQLite initially, PostgreSQL for production
 - **Historical Data**: Track scores over time
 - **Comparison Reports**: Before/after analysis
@@ -673,7 +770,7 @@ logger.info("Analysis started for %s", website_url)
 - ✅ CSV file upload handling
 - ✅ Comprehensive documentation
 
-### Stage 2 (Current) - 2026-01-19
+### Stage 2 (Complete) - 2026-01-19
 - ✅ HTML web interface with form
 - ✅ GET / endpoint serves web UI
 - ✅ POST /analyse-form endpoint with HTML reports
@@ -684,13 +781,24 @@ logger.info("Analysis started for %s", website_url)
 - ✅ GET /health endpoint for API monitoring
 - ✅ Updated documentation for web interface
 
-### Stage 3 (Planned)
-- ⏳ AI visibility analysis with LLM integration
-- ⏳ Schema.org detection
-- ⏳ E-E-A-T scoring
-- ⏳ Enhanced ROI calculations with AI visibility
+### Stage 3 (Current) - 2026-01-19
+- ✅ LLMTester class with mock implementation
+- ✅ score_ai_visibility() function
+- ✅ Brand name, competitor, and custom query inputs
+- ✅ Mock AI visibility scoring with query type breakdown
+- ✅ AI visibility section in HTML reports
+- ✅ Updated project_roi() to include AI visibility
+- ✅ Comprehensive TODO comments for real API integration
+- ✅ AI visibility included in JSON API responses
 
 ### Stage 4 (Planned)
+- ⏳ Real LLM API integration (Claude, ChatGPT, Gemini, Perplexity)
+- ⏳ Parallel testing across multiple LLMs
+- ⏳ Rate limiting and caching
+- ⏳ Schema.org detection
+- ⏳ E-E-A-T scoring
+
+### Stage 5 (Planned)
 - ⏳ Database persistence (SQLite/PostgreSQL)
 - ⏳ Historical tracking
 - ⏳ Comparison reports
@@ -700,5 +808,5 @@ logger.info("Analysis started for %s", website_url)
 ---
 
 **Last Updated**: 2026-01-19
-**Current Version**: 2.0.0 - Stage 2
+**Current Version**: 3.0.0 - Stage 3
 **Maintained By**: Discovrd Agency Development Team
